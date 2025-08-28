@@ -1,0 +1,6 @@
+.idea
+.gemini-clipboard
+debugger.txt
+node_modules
+.env
+*.html
