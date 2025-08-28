@@ -38,30 +38,52 @@ async function saveComments(comments) {
     }
 }
 
-export async function sync(targetUrl, defaultMaxFloor = 0) {
+export async function sync(getNextPageUrl, defaultMaxFloor = 0) {
     console.log('Starting sync...');
     try {
         const latestFloor = await getLatestFloor();
         const maxFloor = latestFloor > 0 ? latestFloor : defaultMaxFloor;
+        let currentPage = 1;
+        let hasNewComments = true;
 
-        console.log(`Fetching data from ${targetUrl}`);
-        const htmlContent = await fetchPage(targetUrl, userCookie);
-        const comments = parseComments(htmlContent);
+        while (hasNewComments) {
+            const paginatedUrl = getNextPageUrl(currentPage);
+            console.log(`Fetching data from ${paginatedUrl}`);
+            const htmlContent = await fetchPage(paginatedUrl, userCookie);
+            const comments = parseComments(htmlContent);
 
-        const newComments = comments.filter(comment => comment.floor > maxFloor);
+            if (comments.length === 0) {
+                console.log(`No comments found on page ${currentPage}. Stopping sync.`);
+                hasNewComments = false;
+                break;
+            }
 
-        if (newComments.length > 0) {
-            const commentsToInsert = newComments.map(c => ({
-                floor: c.floor,
-                user: c.user,
-                time: c.time,
-                is_op: c.isOP,
-                content: c.content,
-                quote: c.quote
-            }));
-            await saveComments(commentsToInsert);
-        } else {
-            console.log('No new comments to save.');
+            const newComments = comments.filter(comment => comment.floor > maxFloor);
+
+            if (newComments.length > 0) {
+                const commentsToInsert = newComments.map(c => ({
+                    floor: c.floor,
+                    user: c.user,
+                    time: c.time,
+                    is_op: c.isOP,
+                    content: c.content,
+                    quote: c.quote
+                }));
+                await saveComments(commentsToInsert);
+                console.log(`Found and saved ${newComments.length} new comments from page ${currentPage}.`);
+            } else {
+                console.log(`No new comments (floor > ${maxFloor}) found on page ${currentPage}. Stopping sync.`);
+                hasNewComments = false;
+            }
+
+            // If the lowest floor on the current page is less than or equal to maxFloor,
+            // it means we've caught up with existing data, so we can stop.
+            if (comments.length > 0 && comments[comments.length - 1].floor <= maxFloor) {
+                console.log(`Reached existing comments (floor <= ${maxFloor}) on page ${currentPage}. Stopping sync.`);
+                hasNewComments = false;
+            }
+
+            currentPage++;
         }
 
     } catch (error) {
