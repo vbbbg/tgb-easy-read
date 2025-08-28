@@ -1,13 +1,32 @@
 import fs from 'fs';
 import * as cheerio from 'cheerio';
 
-const html = fs.readFileSync('page.html', 'utf-8');
+const html = fs.readFileSync('a.html', 'utf-8');
 const $ = cheerio.load(html);
 
 const comments = [];
 
+function getImageUrl(imageElement) {
+    if (!imageElement || imageElement.length === 0) {
+        return null;
+    }
+    return imageElement.attr('src2') || imageElement.attr('src');
+}
+
 // 首先，处理主楼内容 (楼主的原始帖子)
-const opContent = $('.article-text.p_coten').first().text().trim();
+const opDiv = $('.article-text.p_coten').first();
+let opContent;
+const opImage = opDiv.find('img');
+const opImageUrl = getImageUrl(opImage);
+
+if (opImageUrl) {
+    opContent = {
+        text: opDiv.contents().filter((index, contentEl) => contentEl.type === 'text').text().trim(),
+        image: opImageUrl
+    };
+} else {
+    opContent = opDiv.text().trim();
+}
 const opUser = $('.article-data .data-userid a').first().text().trim();
 const opTime = $('.article-data > span').text().match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/)[0];
 
@@ -25,7 +44,19 @@ comments.push({
 $('.comment-lists .comment-data').each((i, el) => {
     const commentDiv = $(el);
     const user = commentDiv.find('.user-name').text().trim();
-    const content = commentDiv.find('.comment-data-text').text().trim();
+    const commentDataText = commentDiv.find('.comment-data-text');
+    let content;
+    const image = commentDataText.find('img');
+    const imageUrl = getImageUrl(image);
+
+    if (imageUrl) {
+        content = {
+            text: commentDataText.contents().filter((index, contentEl) => contentEl.type === 'text').text().trim(),
+            image: imageUrl
+        };
+    } else {
+        content = commentDataText.text().trim();
+    }
     const time = commentDiv.find('.pcyclspan').text().trim();
     let floor = null;
     let quote = null;
@@ -35,7 +66,19 @@ $('.comment-lists .comment-data').each((i, el) => {
     if (quoteDiv.length > 0) {
         const quoteUser = quoteDiv.find('.data-quote-right a').first().text().trim();
         const quoteTime = quoteDiv.find('.data-quote-right > div > span').first().text().trim();
-        const quoteContent = quoteDiv.find('.quote-content').text().trim();
+        const quoteContentDiv = quoteDiv.find('.quote-content');
+        let quoteContent;
+        const quoteImage = quoteContentDiv.find('img');
+        const quoteImageUrl = getImageUrl(quoteImage);
+
+        if (quoteImageUrl) {
+            quoteContent = {
+                text: quoteContentDiv.contents().filter((index, contentEl) => contentEl.type === 'text').text().trim(),
+                image: quoteImageUrl
+            };
+        } else {
+            quoteContent = quoteContentDiv.text().trim();
+        }
         quote = {
             user: quoteUser,
             time: quoteTime,
