@@ -24,7 +24,7 @@ export function parseComments(html) {
             image: opImageUrl
         };
     } else {
-        opContent = opDiv.text().trim();
+        opContent = {text: opDiv.text().trim()};
     }
     const opUser = $('.article-data .data-userid a').first().text().trim();
     const opTime = $('.article-data > span').text().match(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/)[0];
@@ -54,7 +54,7 @@ export function parseComments(html) {
                 image: imageUrl
             };
         } else {
-            content = commentDataText.text().trim();
+            content = {text: commentDataText.text().trim()};
         }
         const time = commentDiv.find('.pcyclspan').text().trim();
         let floor = null;
@@ -76,7 +76,7 @@ export function parseComments(html) {
                     image: quoteImageUrl
                 };
             } else {
-                quoteContent = quoteContentDiv.text().trim();
+                quoteContent = {text: quoteContentDiv.text().trim()};
             }
             quote = {
                 user: quoteUser,
