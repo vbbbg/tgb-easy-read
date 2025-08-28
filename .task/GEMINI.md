@@ -1,4 +1,4 @@
-### 设置数据库，用于保存 parse_comments 返回的内容 
+### 设置数据库，用于保存 parse_comments 返回的内容, 使用 supabase, Secret keys 存放于 .env SB_KEY
 
 ### 编写脚本，定时获取数据
 1. 7:00 - 23:59，每隔 30min 进行数据获取
