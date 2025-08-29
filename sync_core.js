@@ -84,6 +84,8 @@ export async function sync(getNextPageUrl, defaultMaxFloor = 0) {
             }
 
             currentPage++;
+            // Wait for 5 seconds before fetching the next page
+            await new Promise(resolve => setTimeout(resolve, 5000));
         }
 
     } catch (error) {
