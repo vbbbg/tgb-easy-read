@@ -3,7 +3,7 @@ main = "ag/cloudflare_worker.js"
 compatibility_date = "2024-03-26"
 
 [triggers]
-# Run every hour at minute 0.
-# You can change this schedule as needed.
-crons = ["0 */23 * * *"]
-timezone = "Asia/Shanghai"
+crons = ["10 7 * * *"]
+
+[observability.logs]
+enabled = true
