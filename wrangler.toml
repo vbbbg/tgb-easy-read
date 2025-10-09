@@ -1,9 +1,23 @@
+# Common compatibility date for all workers in this project
+compatibility_date = "2025-10-09"
+
+# =================== SSE Worker Environment ===================
+[env.sse]
 name = "sse-data-fetcher"
 main = "ag/cloudflare_worker.js"
-compatibility_date = "2024-03-26"
 
-[triggers]
-crons = ["10 7 * * *"]
+[env.sse.triggers]
+# Triggers at 07:10 UTC (15:10 CST)
+# crons = ["30 9 * * *"]
+
+# =================== SZSE Worker Environment ==================
+[env.szse]
+name = "szse-data-fetcher"
+main = "ag/szse/szse_worker.js"
+
+[env.szse.triggers]
+# Triggers at 07:15 UTC (15:15 CST) to stagger the executions
+# crons = ["30 9 * * *"]
 
 [observability.logs]
 enabled = true
