@@ -11,10 +11,11 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const userCookie = process.env.COOKIE;
 const tableName = 'comments';
 
-async function getLatestFloor() {
+async function getLatestFloor(postId) {
     const { data, error } = await supabase
         .from(tableName)
         .select('floor')
+        .eq('post_id', postId)
         .order('floor', { ascending: false })
         .limit(1);
 
@@ -27,9 +28,7 @@ async function getLatestFloor() {
 }
 
 async function saveComments(comments) {
-    const { error } = await supabase
-        .from(tableName)
-        .upsert(comments, { onConflict: 'floor' });
+    const { error } = await supabase.from(tableName).upsert(comments, { onConflict: 'post_id, floor' });
 
     if (error) {
         console.error('Error saving comments:', error);
@@ -38,10 +37,10 @@ async function saveComments(comments) {
     }
 }
 
-export async function sync(getNextPageUrl, defaultMaxFloor = 0) {
-    console.log('Starting sync...');
+export async function sync(postId, getNextPageUrl, defaultMaxFloor = 0) {
+    console.log(`Starting sync for post: ${postId}...`);
     try {
-        const latestFloor = await getLatestFloor();
+        const latestFloor = await getLatestFloor(postId);
         const maxFloor = latestFloor > 0 ? latestFloor : defaultMaxFloor;
         let currentPage = 1;
         let hasNewComments = true;
@@ -62,6 +61,7 @@ export async function sync(getNextPageUrl, defaultMaxFloor = 0) {
 
             if (newComments.length > 0) {
                 const commentsToInsert = newComments.map(c => ({
+                    post_id: postId,
                     floor: c.floor,
                     user: c.user,
                     time: c.time,
@@ -76,20 +76,16 @@ export async function sync(getNextPageUrl, defaultMaxFloor = 0) {
                 hasNewComments = false;
             }
 
-            // If the lowest floor on the current page is less than or equal to maxFloor,
-            // it means we've caught up with existing data, so we can stop.
             if (comments.length > 0 && comments[comments.length - 1].floor <= maxFloor) {
                 console.log(`Reached existing comments (floor <= ${maxFloor}) on page ${currentPage}. Stopping sync.`);
                 hasNewComments = false;
             }
 
             currentPage++;
-            // Wait for 5 seconds before fetching the next page
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
-
     } catch (error) {
         console.error('Error during sync:', error);
     }
-    console.log('Sync finished.');
+    console.log(`Sync finished for post: ${postId}.`);
 }

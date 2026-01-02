@@ -7,12 +7,13 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 const tableName = 'comments';
 
-async function checkMissingFloors(minFloor = 1, maxFloorParam = null) {
-    console.log('Checking for missing floor numbers...');
+async function checkMissingFloors(postId, minFloor = 1, maxFloorParam = null) {
+    console.log(`Checking for missing floor numbers for post: ${postId}...`);
     try {
         const { data, error } = await supabase
             .from(tableName)
             .select('floor')
+            .eq('post_id', postId)
             .order('floor', { ascending: true });
 
         if (error) {
@@ -21,7 +22,7 @@ async function checkMissingFloors(minFloor = 1, maxFloorParam = null) {
         }
 
         if (data.length === 0) {
-            console.log('No comments found in the database.');
+            console.log(`No comments found in the database for post: ${postId}.`);
             return;
         }
 
@@ -47,7 +48,6 @@ async function checkMissingFloors(minFloor = 1, maxFloorParam = null) {
         } else {
             console.log('No missing floor numbers found in the specified range.');
         }
-
     } catch (error) {
         console.error('Error during missing floor check:', error);
     }
@@ -55,18 +55,11 @@ async function checkMissingFloors(minFloor = 1, maxFloorParam = null) {
 }
 
 // Example usage:
-// To check all missing floors from 1 up to the database's max floor:
-// checkMissingFloors();
+// checkMissingFloors('2hIcnFHiTnx');
 
-// To check missing floors from 100 to 200:
-// checkMissingFloors(100, 200);
-
-// To check missing floors from 50 up to the database's max floor:
-// checkMissingFloors(50);
-
-// You can call it with arguments from process.argv if you want to run it from the command line
 const args = process.argv.slice(2);
-const min = args[0] ? parseInt(args[0], 10) : 34751;
-const max = args[1] ? parseInt(args[1], 10) : undefined;
+const postId = args[0] || '2hIcnFHiTnx';
+const min = args[1] ? parseInt(args[1], 10) : 1;
+const max = args[2] ? parseInt(args[2], 10) : undefined;
 
-checkMissingFloors(min, max);
+checkMissingFloors(postId, min, max);
