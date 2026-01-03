@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { sync } from './sync_core.js';
-。import { targetUrls } from './config.js';
+import { targetUrls } from './config.js';
 
 const performAllSyncs = async () => {
     for (const baseUrl of targetUrls) {
